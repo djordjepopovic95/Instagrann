@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "413147051275",
+    "firebase_url": "https://instagrann-46975.firebaseio.com",
+    "project_id": "instagrann-46975",
+    "storage_bucket": "instagrann-46975.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:413147051275:android:8b8a2d8e8d10329f",
+        "android_client_info": {
+          "package_name": "com.example.djord.instagrann"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "413147051275-d17v4ba4fbidf9pl350u7egr6155q0h4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.djord.instagrann",
+            "certificate_hash": "1b8151be597f4df243e761fcc13065c95e709696"
+          }
+        },
+        {
+          "client_id": "413147051275-i4208akfmoi7j5lmmjkhbsk0gp45ambd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDcW-3JynS9Wd3XwrdHcMxwMLIGGixKmG8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "413147051275-i4208akfmoi7j5lmmjkhbsk0gp45ambd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
