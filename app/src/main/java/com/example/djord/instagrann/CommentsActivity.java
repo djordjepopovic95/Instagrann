@@ -65,44 +65,45 @@ public class CommentsActivity extends AppCompatActivity{
         commentsList = new ArrayList<>();
         user_list = new ArrayList<>();
         commentsRecyclerAdapter = new CommentsRecyclerAdapter(commentsList, user_list);
-        //comment_list.setHasFixedSize(true);
+        // comment_list.setHasFixedSize(true);
         comment_list.setLayoutManager(new LinearLayoutManager(this));
         comment_list.setAdapter(commentsRecyclerAdapter);
+        if (firebaseFirestore != null) {
+            firebaseFirestore.collection("Posts/" + blog_post_id + "/Comments")
+                    .addSnapshotListener(CommentsActivity.this, new EventListener<QuerySnapshot>() {
+                        @Override
+                        public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
 
-        firebaseFirestore.collection("Posts/" + blog_post_id + "/Comments")
-                .addSnapshotListener(CommentsActivity.this, new EventListener<QuerySnapshot>() {
-                    @Override
-                    public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+                            if (documentSnapshots != null && !documentSnapshots.isEmpty()) {
 
-                        if (!documentSnapshots.isEmpty()) {
+                                for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
 
-                            for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
+                                    if (doc != null && doc.getType() == DocumentChange.Type.ADDED) {
 
-                                if (doc.getType() == DocumentChange.Type.ADDED) {
+                                        String commentId = doc.getDocument().getId();
+                                        final Comments comments = doc.getDocument().toObject(Comments.class);
+                                        String user_id = doc.getDocument().getString("user_id");
 
-                                    String commentId = doc.getDocument().getId();
-                                    final Comments comments = doc.getDocument().toObject(Comments.class);
-                                    String user_id = doc.getDocument().getString("user_id");
-
-                                    firebaseFirestore.collection("Users").document(user_id).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                            if (task.isSuccessful()) {
-                                                User user = task.getResult().toObject(User.class);
-                                                user_list.add(user);
-                                                commentsList.add(comments);
-                                                commentsRecyclerAdapter.notifyDataSetChanged();
+                                        firebaseFirestore.collection("Users").document(user_id).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                                if (task != null && task.isSuccessful()) {
+                                                    User user = task.getResult().toObject(User.class);
+                                                    user_list.add(user);
+                                                    commentsList.add(comments);
+                                                    commentsRecyclerAdapter.notifyDataSetChanged();
+                                                }
                                             }
-                                        }
-                                    });
+                                        });
 
+                                    }
                                 }
+
                             }
 
                         }
-
-                    }
-                });
+                    });
+        }
 
         comment_post_btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -114,17 +115,18 @@ public class CommentsActivity extends AppCompatActivity{
                     commentsMap.put("message", commentMessage);
                     commentsMap.put("user_id", current_user_id);
                     commentsMap.put("timestamp", FieldValue.serverTimestamp());
-
-                    firebaseFirestore.collection("Posts").document(blog_post_id).collection("Comments").add(commentsMap).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
-                        @Override
-                        public void onComplete(@NonNull Task<DocumentReference> task) {
-                            if(!task.isSuccessful()){
-                                Toast.makeText(CommentsActivity.this, "Error: Comment not posted. Try again later.", Toast.LENGTH_SHORT).show();
-                            } else {
-                                comment_field.setText("");
+                    if (firebaseFirestore != null) {
+                        firebaseFirestore.collection("Posts").document(blog_post_id).collection("Comments").add(commentsMap).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
+                            @Override
+                            public void onComplete(@NonNull Task<DocumentReference> task) {
+                                if (!task.isSuccessful()) {
+                                    Toast.makeText(CommentsActivity.this, "Error: Comment not posted. Try again later.", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    comment_field.setText("");
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
                 }
             }
         });

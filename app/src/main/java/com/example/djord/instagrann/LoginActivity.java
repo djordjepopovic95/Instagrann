@@ -12,10 +12,17 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.iid.FirebaseInstanceId;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -26,6 +33,7 @@ public class LoginActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private ProgressBar loginProgress;
 
+    private FirebaseFirestore mFirestore;
 
 
     @Override
@@ -34,6 +42,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         mAuth = FirebaseAuth.getInstance();
+        mFirestore = FirebaseFirestore.getInstance();
 
         loginEmailText = (EditText) findViewById(R.id.regEmail);
         loginPassText = (EditText) findViewById(R.id.regPass);
@@ -61,11 +70,27 @@ public class LoginActivity extends AppCompatActivity {
                     mAuth.signInWithEmailAndPassword(loginEmail, loginPassword).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
-                            if(task.isSuccessful()) {
-                                sendToMain();
+                            if (task.isSuccessful()) {
+
+
+                                String token_id = FirebaseInstanceId.getInstance().getToken();
+                                String current_id = mAuth.getCurrentUser().getUid();
+
+                                Map<String, Object> tokenMap = new HashMap<>();
+                                tokenMap.put("token_id", token_id);
+                                if (mFirestore != null) {
+                                    mFirestore.collection("Users").document(current_id).update(tokenMap).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            sendToMain();
+                                        }
+                                    });
+                                }
+
+
                             } else {
                                 String errorMessage = task.getException().getMessage();
-                                Toast.makeText(LoginActivity.this,  "Error: " + errorMessage, Toast.LENGTH_LONG).show();
+                                Toast.makeText(LoginActivity.this, "Error: " + errorMessage, Toast.LENGTH_LONG).show();
                             }
                             loginProgress.setVisibility(View.INVISIBLE);
                         }
@@ -82,7 +107,7 @@ public class LoginActivity extends AppCompatActivity {
 
         FirebaseUser currentUser = mAuth.getCurrentUser();
 
-        if(currentUser != null) {
+        if (currentUser != null) {
             sendToMain();
         }
     }

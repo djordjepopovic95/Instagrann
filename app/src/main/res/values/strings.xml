@@ -17,6 +17,7 @@
     <string name="bottom_home_text">Home</string>
     <string name="bottom_notification_text">Notification</string>
     <string name="bottom_ac_text">Account</string>
+    <string name="default_notification_channel_id">Instagrann_CH_01</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

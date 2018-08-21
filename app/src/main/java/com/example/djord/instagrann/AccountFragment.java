@@ -85,30 +85,32 @@ public class AccountFragment extends Fragment {
             }
         });
 
-        firebaseFirestore.collection("Users").document(userId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    if (task.getResult().exists()) {
+        if (firebaseFirestore != null) {
+            firebaseFirestore.collection("Users").document(userId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task != null && task.isSuccessful()) {
+                        if (task.getResult().exists()) {
 
-                        String name = task.getResult().getString("name");
-                        String image = task.getResult().getString("image");
+                            String name = task.getResult().getString("name");
+                            String image = task.getResult().getString("image");
 
-                        mainImageURI = Uri.parse(image);
+                            mainImageURI = Uri.parse(image);
 
-                        username.setText(name);
-                        RequestOptions placeholderRequest = new RequestOptions();
-                        placeholderRequest.placeholder(R.drawable.profiledefault);
-                        Glide.with(view).setDefaultRequestOptions(placeholderRequest).load(image).into(userImage);
+                            username.setText(name);
+                            RequestOptions placeholderRequest = new RequestOptions();
+                            placeholderRequest.placeholder(R.drawable.profiledefault);
+                            Glide.with(view).setDefaultRequestOptions(placeholderRequest).load(image).into(userImage);
+                        }
+
+                    } else {
+                        String error = task.getException().getMessage();
+                        Toast.makeText(getView().getContext(), "(FIRESTORE Retrieve Error): " + error, Toast.LENGTH_LONG).show();
+
                     }
-
-                } else {
-                    String error = task.getException().getMessage();
-                    Toast.makeText(getView().getContext(), "(FIRESTORE Retrieve Error): " + error, Toast.LENGTH_LONG).show();
-
                 }
-            }
-        });
+            });
+        }
 
         acc_list = new ArrayList<>();
         user_list = new ArrayList<>();
@@ -132,97 +134,100 @@ public class AccountFragment extends Fragment {
             }
         });
 
-        Query firstQuery = firebaseFirestore.collection("Posts").orderBy("timestamp", Query.Direction.DESCENDING).limit(3);
+        if (firebaseFirestore != null) {
+            Query firstQuery = firebaseFirestore.collection("Posts").orderBy("timestamp", Query.Direction.DESCENDING).limit(3);
 
-        firstQuery.addSnapshotListener(getActivity(), new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
-                if (!documentSnapshots.isEmpty()) {
+            firstQuery.addSnapshotListener(getActivity(), new EventListener<QuerySnapshot>() {
+                @Override
+                public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+                    if (documentSnapshots != null && !documentSnapshots.isEmpty()) {
 
-                    if (isFirstLoad) {
-                        lastVisible = documentSnapshots.getDocuments().get(documentSnapshots.size() - 1);
-                        acc_list.clear();
-                        user_list.clear();
-                    }
-                    for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
-                        if (doc.getType() == DocumentChange.Type.ADDED) {
-
-                            String instaPostId = doc.getDocument().getId();
-
-                            final InstaPost instaPost = doc.getDocument().toObject(InstaPost.class).withId(instaPostId);
-
-                            final String blogUserId = doc.getDocument().getString("user_id");
-
-                            firebaseFirestore.collection("Users").document(blogUserId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                    if (task.isSuccessful()) {
-                                        User user = task.getResult().toObject(User.class);
-
-                                        if (isFirstLoad) {
-                                            if (blogUserId.equals(userId)) {
-                                                user_list.add(user);
-                                                acc_list.add(instaPost);
-                                            }
-                                        } else {
-                                            if (blogUserId.equals(userId)) {
-                                                acc_list.add(0, instaPost);
-                                                user_list.add(0, user);
-                                            }
-                                        }
-                                        accRecyclerAdapter.notifyDataSetChanged();
-
-                                    }
-                                }
-                            });
-
-
+                        if (isFirstLoad) {
+                            lastVisible = documentSnapshots.getDocuments().get(documentSnapshots.size() - 1);
+                            acc_list.clear();
+                            user_list.clear();
                         }
-                    }
-                    isFirstLoad = false;
-                }
-            }
-        });
+                        for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
+                            if (doc.getType() == DocumentChange.Type.ADDED) {
 
+                                String instaPostId = doc.getDocument().getId();
+
+                                final InstaPost instaPost = doc.getDocument().toObject(InstaPost.class).withId(instaPostId);
+
+                                final String blogUserId = doc.getDocument().getString("user_id");
+
+                                firebaseFirestore.collection("Users").document(blogUserId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                        if (task != null && task.isSuccessful()) {
+                                            User user = task.getResult().toObject(User.class);
+
+                                            if (isFirstLoad) {
+                                                if (blogUserId.equals(userId)) {
+                                                    user_list.add(user);
+                                                    acc_list.add(instaPost);
+                                                }
+                                            } else {
+                                                if (blogUserId.equals(userId)) {
+                                                    acc_list.add(0, instaPost);
+                                                    user_list.add(0, user);
+                                                }
+                                            }
+                                            accRecyclerAdapter.notifyDataSetChanged();
+
+                                        }
+                                    }
+                                });
+
+
+                            }
+                        }
+                        isFirstLoad = false;
+                    }
+                }
+            });
+        }
         return view;
     }
 
     public void loadMorePosts(){
-        Query nextQuery = firebaseFirestore.collection("Posts").orderBy("timestamp", Query.Direction.DESCENDING).startAfter(lastVisible).limit(3);
+        if (firebaseFirestore != null) {
+            Query nextQuery = firebaseFirestore.collection("Posts").orderBy("timestamp", Query.Direction.DESCENDING).startAfter(lastVisible).limit(3);
 
-        nextQuery.addSnapshotListener(getActivity(), new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+            nextQuery.addSnapshotListener(getActivity(), new EventListener<QuerySnapshot>() {
+                @Override
+                public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
 
-                if(!documentSnapshots.isEmpty()) {
-                    lastVisible = documentSnapshots.getDocuments().get(documentSnapshots.size() - 1);
+                    if (documentSnapshots != null && !documentSnapshots.isEmpty()) {
+                        lastVisible = documentSnapshots.getDocuments().get(documentSnapshots.size() - 1);
+                        if(documentSnapshots != null) {
+                        for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
+                            if (doc.getType() == DocumentChange.Type.ADDED) {
+                                String instaPostId = doc.getDocument().getId();
+                                String blogUserId = doc.getDocument().getString("user_id");
 
-                    for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
-                        if (doc.getType() == DocumentChange.Type.ADDED) {
-                            String instaPostId = doc.getDocument().getId();
-                            String blogUserId = doc.getDocument().getString("user_id");
-
-                            final InstaPost instaPost = doc.getDocument().toObject(InstaPost.class).withId(instaPostId);
-                            firebaseFirestore.collection("Users").document(blogUserId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                    if (task.isSuccessful()) {
-                                        User user = task.getResult().toObject(User.class);
+                                final InstaPost instaPost = doc.getDocument().toObject(InstaPost.class).withId(instaPostId);
+                                firebaseFirestore.collection("Users").document(blogUserId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                        if (task != null && task.isSuccessful()) {
+                                            User user = task.getResult().toObject(User.class);
 
 
-                                        user_list.add(user);
-                                        acc_list.add(instaPost);
+                                            user_list.add(user);
+                                            acc_list.add(instaPost);
 
-                                        accRecyclerAdapter.notifyDataSetChanged();
+                                            accRecyclerAdapter.notifyDataSetChanged();
 
+                                        }
                                     }
-                                }
-                            });
-                        }
+                                });
+                            }
+                        }}
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
 }

@@ -84,64 +84,66 @@ public class AccRecyclerAdapter extends RecyclerView.Adapter<AccRecyclerAdapter.
         long milliseconds = blog_list.get(position).getTimestamp().getTime();
         String dateString = DateFormat.format("dd.MM.yyyy.", new Date(milliseconds)).toString();
         holder.setDate(dateString);
+        if (firebaseFirestore != null) {
 
-        firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").addSnapshotListener(new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+            firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").addSnapshotListener(new EventListener<QuerySnapshot>() {
+                @Override
+                public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
 
-                if (!documentSnapshots.isEmpty()) {
+                    if (documentSnapshots != null && !documentSnapshots.isEmpty()) {
 
-                    int count = documentSnapshots.size();
+                        int count = documentSnapshots.size();
 
-                    holder.updateLikesCount(count);
+                        holder.updateLikesCount(count);
 
-                } else {
+                    } else {
 
-                    holder.updateLikesCount(0);
+                        holder.updateLikesCount(0);
 
-                }
-
-            }
-        });
-
-        firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-            @Override
-            public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
-
-                if (documentSnapshot.exists()) {
-
-                    holder.blogLikeBtn.setImageDrawable(context.getDrawable(R.mipmap.action_add));
-
-                } else {
-
-                    holder.blogLikeBtn.setImageDrawable(context.getDrawable(R.mipmap.action_like_gray));
+                    }
 
                 }
+            });
 
-            }
-        });
+            firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+                @Override
+                public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
 
+                    if (documentSnapshot != null && documentSnapshot.exists()) {
+
+                        holder.blogLikeBtn.setImageDrawable(context.getDrawable(R.mipmap.action_add));
+
+                    } else {
+
+                        holder.blogLikeBtn.setImageDrawable(context.getDrawable(R.mipmap.action_like_gray));
+
+                    }
+
+                }
+            });
+        }
 
         holder.blogLikeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (firebaseFirestore != null) {
+                    firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
 
-                firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                            if (task != null && !task.getResult().exists()) {
+                                Map<String, Object> likesMap = new HashMap<>();
+                                likesMap.put("timestamp", FieldValue.serverTimestamp());
 
-                        if (!task.getResult().exists()) {
-                            Map<String, Object> likesMap = new HashMap<>();
-                            likesMap.put("timestamp", FieldValue.serverTimestamp());
+                                firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).set(likesMap);
 
-                            firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).set(likesMap);
+                            } else {
+                                firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).delete();
 
-                        } else {
-                            firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).delete();
-
+                            }
                         }
-                    }
-                });
+                    });
+                }
 
             }
         });
@@ -163,14 +165,16 @@ public class AccRecyclerAdapter extends RecyclerView.Adapter<AccRecyclerAdapter.
                 builder.setMessage("Are you sure you want to delete this post?")
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                firebaseFirestore.collection("Posts").document(instaPostId).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
-                                        blog_list.remove(position);
-                                        user_list.remove(position);
-                                        notifyDataSetChanged();
-                                    }
-                                });
+                                if (firebaseFirestore!= null) {
+                                    firebaseFirestore.collection("Posts").document(instaPostId).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            blog_list.remove(position);
+                                            user_list.remove(position);
+                                            notifyDataSetChanged();
+                                        }
+                                    });
+                                }
                             }
                         })
                         .setNegativeButton("Cancel", null);

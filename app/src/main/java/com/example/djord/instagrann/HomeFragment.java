@@ -69,96 +69,102 @@ public class HomeFragment extends Fragment {
                 }
             }
         });
+        if (firebaseFirestore != null) {
+            Query firstQuery = firebaseFirestore.collection("Posts").orderBy("timestamp", Query.Direction.DESCENDING).limit(3);
 
-        Query firstQuery = firebaseFirestore.collection("Posts").orderBy("timestamp", Query.Direction.DESCENDING).limit(3);
+            firstQuery.addSnapshotListener(getActivity(), new EventListener<QuerySnapshot>() {
+                @Override
+                public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+                    if (documentSnapshots != null && !documentSnapshots.isEmpty()) {
 
-        firstQuery.addSnapshotListener(getActivity(), new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
-                if (!documentSnapshots.isEmpty()) {
-
-                    if (isFirstLoad) {
-                        lastVisible = documentSnapshots.getDocuments().get(documentSnapshots.size() - 1);
-                        blog_list.clear();
-                        user_list.clear();
-                    }
-                    for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
-                        if (doc.getType() == DocumentChange.Type.ADDED) {
-
-                            String instaPostId = doc.getDocument().getId();
-
-                            final InstaPost instaPost = doc.getDocument().toObject(InstaPost.class).withId(instaPostId);
-
-                            String blogUserId = doc.getDocument().getString("user_id");
-
-                            firebaseFirestore.collection("Users").document(blogUserId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                    if (task.isSuccessful()) {
-                                        User user = task.getResult().toObject(User.class);
-
-                                        if (isFirstLoad) {
-                                            user_list.add(user);
-                                            blog_list.add(instaPost);
-                                        } else {
-                                            blog_list.add(0, instaPost);
-                                            user_list.add(0, user);
-
-                                        }
-                                        instaRecyclerAdapter.notifyDataSetChanged();
-
-                                    }
-                                }
-                            });
-
-
+                        if (isFirstLoad) {
+                            lastVisible = documentSnapshots.getDocuments().get(documentSnapshots.size() - 1);
+                            blog_list.clear();
+                            user_list.clear();
                         }
+                        if(documentSnapshots != null) {
+                            for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
+                                if (doc.getType() == DocumentChange.Type.ADDED) {
+
+                                    String instaPostId = doc.getDocument().getId();
+
+                                    final InstaPost instaPost = doc.getDocument().toObject(InstaPost.class).withId(instaPostId);
+
+                                    String blogUserId = doc.getDocument().getString("user_id");
+
+                                    firebaseFirestore.collection("Users").document(blogUserId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                            if (task != null && task.isSuccessful()) {
+                                                User user = task.getResult().toObject(User.class);
+
+                                                if (isFirstLoad) {
+                                                    user_list.add(user);
+                                                    blog_list.add(instaPost);
+                                                } else {
+                                                    blog_list.add(0, instaPost);
+                                                    user_list.add(0, user);
+
+                                                }
+                                                instaRecyclerAdapter.notifyDataSetChanged();
+
+                                            }
+                                        }
+                                    });
+
+
+                                }
+                            }
+                        }
+                        isFirstLoad = false;
                     }
-                    isFirstLoad = false;
                 }
-            }
-        });
+            });
+        }
 
         // Inflate the layout for this fragment
         return view;
     }
 
     public void loadMorePosts(){
-        Query nextQuery = firebaseFirestore.collection("Posts").orderBy("timestamp", Query.Direction.DESCENDING).startAfter(lastVisible).limit(3);
+        if (firebaseFirestore != null) {
+            Query nextQuery = firebaseFirestore.collection("Posts").orderBy("timestamp", Query.Direction.DESCENDING).startAfter(lastVisible).limit(3);
 
-        nextQuery.addSnapshotListener(getActivity(), new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+            nextQuery.addSnapshotListener(getActivity(), new EventListener<QuerySnapshot>() {
+                @Override
+                public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
 
-                if(!documentSnapshots.isEmpty()) {
-                    lastVisible = documentSnapshots.getDocuments().get(documentSnapshots.size() - 1);
+                    if (documentSnapshots != null && !documentSnapshots.isEmpty()) {
+                        lastVisible = documentSnapshots.getDocuments().get(documentSnapshots.size() - 1);
+                        if(documentSnapshots != null) {
+                            for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
+                                if (doc.getType() == DocumentChange.Type.ADDED) {
+                                    String instaPostId = doc.getDocument().getId();
+                                    String blogUserId = doc.getDocument().getString("user_id");
 
-                    for (DocumentChange doc : documentSnapshots.getDocumentChanges()) {
-                        if (doc.getType() == DocumentChange.Type.ADDED) {
-                            String instaPostId = doc.getDocument().getId();
-                            String blogUserId = doc.getDocument().getString("user_id");
-
-                            final InstaPost instaPost = doc.getDocument().toObject(InstaPost.class).withId(instaPostId);
-                            firebaseFirestore.collection("Users").document(blogUserId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                    if (task.isSuccessful()) {
-                                        User user = task.getResult().toObject(User.class);
+                                    final InstaPost instaPost = doc.getDocument().toObject(InstaPost.class).withId(instaPostId);
+                                    firebaseFirestore.collection("Users").document(blogUserId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                            if (task != null && task.isSuccessful()) {
+                                                User user = task.getResult().toObject(User.class);
 
 
-                                        user_list.add(user);
-                                        blog_list.add(instaPost);
+                                                user_list.add(user);
+                                                blog_list.add(instaPost);
 
-                                        instaRecyclerAdapter.notifyDataSetChanged();
+                                                instaRecyclerAdapter.notifyDataSetChanged();
 
-                                    }
+                                            }
+                                        }
+                                    });
                                 }
-                            });
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
 }

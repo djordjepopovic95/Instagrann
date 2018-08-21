@@ -108,7 +108,7 @@ public class NewPostActivity extends AppCompatActivity {
                             final String downloadUri = task.getResult().getDownloadUrl().toString();
 
 
-                            if(task.isSuccessful()) {
+                            if(task != null && task.isSuccessful()) {
 
                                 File newImageFile = new File(postImageUri.getPath());
 
@@ -140,22 +140,23 @@ public class NewPostActivity extends AppCompatActivity {
                                         postMap.put("desc", desc);
                                         postMap.put("user_id", currentUserId);
                                         postMap.put("timestamp", FieldValue.serverTimestamp());
-
-                                        firebaseFirestore.collection("Posts").add(postMap).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<DocumentReference> task) {
-                                                if (task.isSuccessful()) {
-                                                    Toast.makeText(NewPostActivity.this, "Post was added.", Toast.LENGTH_LONG).show();
-                                                    Intent mainIntent = new Intent(NewPostActivity.this, MainActivity.class);
-                                                    startActivity(mainIntent);
-                                                    finish();
-                                                } else {
-                                                    String error = task.getException().getMessage();
-                                                    Toast.makeText(NewPostActivity.this, "(IMAGE Error): " + error, Toast.LENGTH_LONG).show();
-                                                    newPostProgress.setVisibility(View.INVISIBLE);
+                                        if (firebaseFirestore != null){
+                                            firebaseFirestore.collection("Posts").add(postMap).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<DocumentReference> task) {
+                                                    if (task.isSuccessful()) {
+                                                        Toast.makeText(NewPostActivity.this, "Post was added.", Toast.LENGTH_LONG).show();
+                                                        Intent mainIntent = new Intent(NewPostActivity.this, MainActivity.class);
+                                                        startActivity(mainIntent);
+                                                        finish();
+                                                    } else {
+                                                        String error = task.getException().getMessage();
+                                                        Toast.makeText(NewPostActivity.this, "(IMAGE Error): " + error, Toast.LENGTH_LONG).show();
+                                                        newPostProgress.setVisibility(View.INVISIBLE);
+                                                    }
                                                 }
-                                            }
-                                        });
+                                            });
+                                    }
 
                                     }
                                 }).addOnFailureListener(new OnFailureListener() {
