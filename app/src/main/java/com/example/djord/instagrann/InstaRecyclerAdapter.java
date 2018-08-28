@@ -62,15 +62,16 @@ public class InstaRecyclerAdapter extends RecyclerView.Adapter<InstaRecyclerAdap
     public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
 
         //holder.setIsRecyclable(false);
+        try {
 
-        final String instaPostId = blog_list.get(position).instaPostId;
-        final String currentUserId = firebaseAuth.getCurrentUser().getUid();
-        String desc_data = blog_list.get(position).getDesc();
-        holder.setDescText(desc_data);
-        String image_url = blog_list.get(position).getImage_url();
-        String thumb_url = blog_list.get(position).getImage_thumb();
-        holder.setBlogImage(image_url, thumb_url);
-        final String blog_user_id = blog_list.get(position).getUser_id();
+            final String instaPostId = blog_list.get(position).instaPostId;
+            final String currentUserId = firebaseAuth.getCurrentUser().getUid();
+            String desc_data = blog_list.get(position).getDesc();
+            holder.setDescText(desc_data);
+            String image_url = blog_list.get(position).getImage_url();
+            String thumb_url = blog_list.get(position).getImage_thumb();
+            holder.setBlogImage(image_url, thumb_url);
+            final String blog_user_id = blog_list.get(position).getUser_id();
 
         /*
         if (blog_user_id.equals(currentUserId)) {
@@ -79,14 +80,15 @@ public class InstaRecyclerAdapter extends RecyclerView.Adapter<InstaRecyclerAdap
         }
         */
 
-        String username = user_list.get(position).getName();
-        String userImage = user_list.get(position).getImage();
+            String username = user_list.get(position).getName();
+            String userImage = user_list.get(position).getImage();
 
-        holder.setUserData(username, userImage);
+            holder.setUserData(username, userImage);
 
-        long milliseconds = blog_list.get(position).getTimestamp().getTime();
-        String dateString = DateFormat.format("dd.MM.yyyy.", new Date(milliseconds)).toString();
-        holder.setDate(dateString);
+            long milliseconds = blog_list.get(position).getTimestamp().getTime();
+            String dateString = DateFormat.format("dd.MM.yyyy.", new Date(milliseconds)).toString();
+            holder.setDate(dateString);
+
         if (firebaseFirestore != null) {
             firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").addSnapshotListener(new EventListener<QuerySnapshot>() {
                 @Override
@@ -186,6 +188,9 @@ public class InstaRecyclerAdapter extends RecyclerView.Adapter<InstaRecyclerAdap
                 builder.show();
             }
         });
+        } catch (Exception e){
+            System.out.println(e.getMessage());
+        }
     }
 
     @Override

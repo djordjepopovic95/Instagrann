@@ -62,126 +62,130 @@ public class AccRecyclerAdapter extends RecyclerView.Adapter<AccRecyclerAdapter.
 
         //holder.setIsRecyclable(false);
 
-        final String instaPostId = blog_list.get(position).instaPostId;
-        final String currentUserId = firebaseAuth.getCurrentUser().getUid();
-        String desc_data = blog_list.get(position).getDesc();
-        holder.setDescText(desc_data);
-        String image_url = blog_list.get(position).getImage_url();
-        String thumb_url = blog_list.get(position).getImage_thumb();
-        holder.setBlogImage(image_url, thumb_url);
-        final String blog_user_id = blog_list.get(position).getUser_id();
+        try {
+            final String instaPostId = blog_list.get(position).instaPostId;
+            final String currentUserId = firebaseAuth.getCurrentUser().getUid();
+            String desc_data = blog_list.get(position).getDesc();
+            holder.setDescText(desc_data);
+            String image_url = blog_list.get(position).getImage_url();
+            String thumb_url = blog_list.get(position).getImage_thumb();
+            holder.setBlogImage(image_url, thumb_url);
+            final String blog_user_id = blog_list.get(position).getUser_id();
 
-        if (blog_user_id.equals(currentUserId)) {
-            holder.blogDeleteBtn.setEnabled(true);
-            holder.blogDeleteBtn.setVisibility(View.VISIBLE);
-        }
+            if (blog_user_id.equals(currentUserId)) {
+                holder.blogDeleteBtn.setEnabled(true);
+                holder.blogDeleteBtn.setVisibility(View.VISIBLE);
+            }
 
-        String username = user_list.get(position).getName();
-        String userImage = user_list.get(position).getImage();
+            String username = user_list.get(position).getName();
+            String userImage = user_list.get(position).getImage();
 
-        holder.setUserData(username, userImage);
+            holder.setUserData(username, userImage);
 
-        long milliseconds = blog_list.get(position).getTimestamp().getTime();
-        String dateString = DateFormat.format("dd.MM.yyyy.", new Date(milliseconds)).toString();
-        holder.setDate(dateString);
-        if (firebaseFirestore != null) {
+            long milliseconds = blog_list.get(position).getTimestamp().getTime();
+            String dateString = DateFormat.format("dd.MM.yyyy.", new Date(milliseconds)).toString();
+            holder.setDate(dateString);
+            if (firebaseFirestore != null) {
 
-            firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").addSnapshotListener(new EventListener<QuerySnapshot>() {
-                @Override
-                public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+                firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
 
-                    if (documentSnapshots != null && !documentSnapshots.isEmpty()) {
+                        if (documentSnapshots != null && !documentSnapshots.isEmpty()) {
 
-                        int count = documentSnapshots.size();
+                            int count = documentSnapshots.size();
 
-                        holder.updateLikesCount(count);
+                            holder.updateLikesCount(count);
 
-                    } else {
+                        } else {
 
-                        holder.updateLikesCount(0);
+                            holder.updateLikesCount(0);
 
-                    }
-
-                }
-            });
-
-            firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-                @Override
-                public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
-
-                    if (documentSnapshot != null && documentSnapshot.exists()) {
-
-                        holder.blogLikeBtn.setImageDrawable(context.getDrawable(R.mipmap.action_add));
-
-                    } else {
-
-                        holder.blogLikeBtn.setImageDrawable(context.getDrawable(R.mipmap.action_like_gray));
-
-                    }
-
-                }
-            });
-        }
-
-        holder.blogLikeBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (firebaseFirestore != null) {
-                    firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-
-                            if (task != null && !task.getResult().exists()) {
-                                Map<String, Object> likesMap = new HashMap<>();
-                                likesMap.put("timestamp", FieldValue.serverTimestamp());
-
-                                firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).set(likesMap);
-
-                            } else {
-                                firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).delete();
-
-                            }
                         }
-                    });
-                }
 
+                    }
+                });
+
+                firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+                    @Override
+                    public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+
+                        if (documentSnapshot != null && documentSnapshot.exists()) {
+
+                            holder.blogLikeBtn.setImageDrawable(context.getDrawable(R.mipmap.action_add));
+
+                        } else {
+
+                            holder.blogLikeBtn.setImageDrawable(context.getDrawable(R.mipmap.action_like_gray));
+
+                        }
+
+                    }
+                });
             }
-        });
 
-        holder.blogCommentBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent commentIntent = new Intent(context, CommentsActivity.class);
-                commentIntent.putExtra("blog_post_id", instaPostId);
-                context.startActivity(commentIntent);
-            }
-        });
+            holder.blogLikeBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (firebaseFirestore != null) {
+                        firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
 
-        holder.blogDeleteBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+                                if (task != null && !task.getResult().exists()) {
+                                    Map<String, Object> likesMap = new HashMap<>();
+                                    likesMap.put("timestamp", FieldValue.serverTimestamp());
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                builder.setMessage("Are you sure you want to delete this post?")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                if (firebaseFirestore!= null) {
-                                    firebaseFirestore.collection("Posts").document(instaPostId).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-                                        @Override
-                                        public void onSuccess(Void aVoid) {
-                                            blog_list.remove(position);
-                                            user_list.remove(position);
-                                            notifyDataSetChanged();
-                                        }
-                                    });
+                                    firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).set(likesMap);
+
+                                } else {
+                                    firebaseFirestore.collection("Posts/").document(instaPostId).collection("Likes").document(currentUserId).delete();
+
                                 }
                             }
-                        })
-                        .setNegativeButton("Cancel", null);
+                        });
+                    }
 
-                builder.show();
-            }
-        });
+                }
+            });
+
+            holder.blogCommentBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent commentIntent = new Intent(context, CommentsActivity.class);
+                    commentIntent.putExtra("blog_post_id", instaPostId);
+                    context.startActivity(commentIntent);
+                }
+            });
+
+            holder.blogDeleteBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setMessage("Are you sure you want to delete this post?")
+                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    if (firebaseFirestore != null) {
+                                        firebaseFirestore.collection("Posts").document(instaPostId).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                            @Override
+                                            public void onSuccess(Void aVoid) {
+                                                blog_list.remove(position);
+                                                user_list.remove(position);
+                                                notifyDataSetChanged();
+                                            }
+                                        });
+                                    }
+                                }
+                            })
+                            .setNegativeButton("Cancel", null);
+
+                    builder.show();
+                }
+            });
+        } catch (Exception e){
+            System.out.println(e.getMessage());
+        }
     }
 
     @Override
